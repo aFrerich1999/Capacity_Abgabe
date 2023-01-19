@@ -2,12 +2,23 @@
 //
 
 #include <iostream>
+#include <ranges>
+#include <cmath>
+#include <algorithm>
+#include <functional> 
 #include <map>
-#include "Capacity.h"
+#include <list> 
+#include <vector> 
+#include <string>  
+#include "Capacity.h"  
 
+using namespace std;
+
+int indexSpeicher = 0;
 
 int main(int argc, char* argv[])
 {
+
     cout << "You have entered " << argc
         << " arguments:" << endl;
 
@@ -20,7 +31,7 @@ int main(int argc, char* argv[])
     cout << "Laenge = " << laenge << endl;
     cout << "Breite = " << breite << endl;
 
-    
+
 
     CapacitySim capacitySim{ laenge, breite };
 
@@ -31,46 +42,51 @@ int main(int argc, char* argv[])
 
 void CapacitySim::runCapacitySim()
 {
-    Building* baubereich = new Building[laenge * breite];
+    Blueprint blueprint{ laenge, breite };
+    Blueprint startBlueprint{ laenge, breite };
 
-    for (int i = 0; i < (laenge * breite); i)
-    {
-        baubereich[i] = le;
-        i++;
-    }
-
-    Building* a_ptr = baubereich;
+    auto it = planSpeicher.begin();
+    planSpeicher.insert(it, startBlueprint);
 
     bool showMenue = true;
     int eingabe;
     while (showMenue) {
-        cout << "Menue:" << endl;
+        cout << endl << endl << "Menue:" << endl;
         cout << "(1) build new building (0 = Leer, 1 = Wasserkraftwerk, 2 = Windkraftwerk, 3 = Solarpanele)" << endl;
         cout << "(2) clear area" << endl;
         cout << "(3) show plan" << endl;
         cout << "(4) end Program" << endl;
+        cout << "(5) save and start new plan" << endl;
+        cout << "(6) show all plans" << endl;
         cout << "Enter Command:";
         cin >> eingabe;
+        cout << endl;
         switch (eingabe)
         {
-        case 1: build(a_ptr);
+        case 1: blueprint.build();
             break;
-        case 2: clearArea(a_ptr);
+        case 2: blueprint.clearArea();
             break;
-        case 3: showPlan(a_ptr);
+        case 3: blueprint.showPlan();
             break;
         case 4: showMenue = false;
+            break;
+        case 5: blueprint = blueprint.startNewPlan(planSpeicher);
+            cout << "You can start new plan now..." << endl;
+            break;
+        case 6:
+            blueprint.showAllPlans(planSpeicher);
             break;
         default: cout << "command not supported";
         }
 
     }
 
-    delete[] baubereich;
+    delete[] blueprint.a_ptr;
 }
 
 
-void CapacitySim::build(Building* a_ptr)
+void Blueprint::build()
 {
     int typeBuilding;
     int lengthBuilding;
@@ -167,7 +183,7 @@ void CapacitySim::build(Building* a_ptr)
     return;
 }
 
-void CapacitySim::clearArea(Building* a_ptr)
+void Blueprint::clearArea()
 {
     int lengthBuilding;
     int widthBuilding;
@@ -220,8 +236,9 @@ void CapacitySim::clearArea(Building* a_ptr)
     return;
 }
 
-void CapacitySim::showPlan(Building* a_ptr)
+void Blueprint::showPlan()
 {
+    cout << endl;
     for (int i = (breite - 1); i >= 0; i--)
     {
         for (int a = 0; a < laenge; a++)
@@ -253,7 +270,6 @@ void CapacitySim::showPlan(Building* a_ptr)
 
     cout << "" << endl;
 
-     
     std::map<Material, int>::iterator itWa = wa.myMap.begin();
     std::map<Material, int>::iterator itWi = wi.myMap.begin();
     std::map<Material, int>::iterator itSo = so.myMap.begin();
@@ -292,7 +308,7 @@ void CapacitySim::showPlan(Building* a_ptr)
 
         while (itSo != so.myMap.end())
         {
-            std::cout << "Key: " << itSo->first.ausgabe << ", Value: " << itSo->second << std::endl;
+            std::cout << "Material: " << itSo->first.ausgabe << ", Anzahl: " << itSo->second << std::endl;
             gesamtMaterialPreis += itSo->first.preis;
             ++itSo;
         }
@@ -301,11 +317,163 @@ void CapacitySim::showPlan(Building* a_ptr)
     }
     cout << "" << endl;
     cout << "Gesamtmaterial Kosten (Euro): " << gesamtMaterialPreis << endl;
+    cout << "Kennzahl: " << kennzahl() << endl;
     cout << "Gesamtpreis fuer alle Buildings (Euro): " << wi.grundPreis * wiCounter + wa.grundPreis * waCounter + so.grundPreis * soCounter << endl;
 
 
     return;
 }
+
+Blueprint Blueprint::startNewPlan(vector<Blueprint>& planSpeicher)
+{
+    //ersatzlösung -> views::filter wird nicht erkannt????
+    bool same = false;
+
+
+    //check if identical plan already exists
+    for (auto blueprintAlt : planSpeicher)
+    {
+        Blueprint comp{ laenge, breite };
+
+        comp(blueprintAlt.a_ptr, a_ptr);
+        if (comp.identisch)
+        {
+            same = true;
+        }
+
+        delete[] comp.a_ptr;
+
+
+    }
+
+    if (!same)
+    {
+        planSpeicher.push_back(*this);
+        cout << endl << "Plan has been saved..." << endl;
+    }
+    else
+    {
+        cout << endl << "Plan already exists..." << endl;
+    }
+
+
+    Blueprint newBlueprint{ laenge,breite };
+    return newBlueprint;
+
+}
+
+void Blueprint::showAllPlans(vector<Blueprint>& planSpeicher)
+{
+    int counter = 1;
+
+    //sort vector
+    sort(planSpeicher.begin(), planSpeicher.end(), [](Blueprint a, Blueprint b) -> bool
+        {
+            return a.kennzahl() > b.kennzahl();
+        });
+
+
+    for (auto b : planSpeicher)
+    {
+        cout << endl << "Plan " << counter << ": " << endl;
+        a_ptr = b.a_ptr;
+        showPlan();
+        counter++;
+    }
+    return;
+}
+
+float Blueprint::kennzahl()
+{
+    float K = 0;
+    float gesamtLeistung = wa.gesamtLeistung(a_ptr, breite, laenge) + wi.gesamtLeistung(a_ptr, breite, laenge) + so.gesamtLeistung(a_ptr, breite, laenge);
+    float gesamtPreis = wa.gesamtPreis(a_ptr, breite, laenge) + wi.gesamtPreis(a_ptr, breite, laenge) + so.gesamtPreis(a_ptr, breite, laenge);
+    if (gesamtPreis != 0)
+    {
+        K = gesamtLeistung / gesamtPreis;
+    }
+    return K;
+}
+
+int Building::gesamtPreisMaterial(Building* a_ptr, int breite, int laenge)
+{
+    int counter = 0;
+    int preisM = 0;
+
+    for (int i = (breite - 1); i >= 0; i--)
+    {
+        for (int a = 0; a < laenge; a++)
+        {
+            if (a_ptr[laenge * i + a].label == label) { counter++; }
+
+        }
+    }
+
+    std::map<Material, int>::iterator itWa = myMap.begin();
+
+    while (itWa != myMap.end())
+    {
+        preisM += itWa->first.preis;
+        ++itWa;
+    }
+
+    return preisM * counter;
+}
+
+int Building::gesamtPreis(Building* a_ptr, int breite, int laenge)
+{
+    int counter = 0;
+
+    for (int i = (breite - 1); i >= 0; i--)
+    {
+        for (int a = 0; a < laenge; a++)
+        {
+            if (a_ptr[laenge * i + a].label == label) { counter++; }
+
+        }
+    }
+
+    return grundPreis * counter;
+
+}
+
+float Building::gesamtLeistung(Building* a_ptr, int breite, int laenge)
+{
+
+    int counter = 0;
+
+    for (int i = (breite - 1); i >= 0; i--)
+    {
+        for (int a = 0; a < laenge; a++)
+        {
+            if (a_ptr[laenge * i + a].label == label) { counter++; }
+
+        }
+    }
+
+    return leistung * counter;
+}
+
+bool Blueprint::operator()(Building* planAlt, Building* planNeu)
+{
+
+    bool same = true;
+    for (int i = (breite - 1); i >= 0; i--)
+    {
+        for (int a = 0; a < laenge; a++)
+        {
+            if (planAlt[laenge * i + a].label != planNeu[laenge * i + a].label) { same = false; }
+
+        }
+    }
+
+    //ersatzlösung view::filter nicht gefunden
+    identisch = same;
+
+    return same;
+}
+
+
 
 // Programm ausführen: STRG+F5 oder Menüeintrag "Debuggen" > "Starten ohne Debuggen starten"
 // Programm debuggen: F5 oder "Debuggen" > Menü "Debuggen starten"
