@@ -4,15 +4,13 @@
 // Capacity2.cpp : Diese Datei enthält die Funktion "main". Hier beginnt und endet die Ausführung des Programms.
 //
 
-#include <iostream>
-//#include <graphics>
+#include <iostream>  
+#include "Capacity.h"
 
 using namespace std;
 
 
 /*
-
-Aufgabe 1:
 
 Baubereich wie folgt aufgebaut
 
@@ -20,10 +18,10 @@ x = laenge = Spalte
 y = breite = Zeile
 
 Labels:
-Leer = 0
-Wasserkraft = 1
-Windkraft = 2
-Solarpanele = 3
+LE = Leer
+WA = Wasserkraftwerk
+WI = Windkraftwerk
+SO = Solarpanele
 
 
 Bereich ist in Quadrate aufgeteilt -> Diese sind duchnummeriert
@@ -38,32 +36,84 @@ länge    länge+1  länge+2 ...   2*länge-1
 
 */
 
+int main(int argc, char* argv[])
+{
+    cout << "You have entered " << argc
+        << " arguments:" << endl;
 
-enum Position { Leer, Wasserkraft, Windkraft, Solarpanele };
-int laenge;
-int breite;
+    for (int i = 0; i < argc; ++i)
+        cout << argv[i] << endl;
 
-void showPlan(Position* a_ptr);
-void build(Position* a_ptr);
-void clearArea(Position* a_ptr);
+    int laenge = *argv[1] - 48; //char to int
+    int breite = *argv[2] - 48; //char to int
+
+    cout << "Laenge = " << laenge << endl;
+    cout << "Breite = " << breite << endl;
+
+    CapacitySim capacitySim{ laenge, breite };
+
+    capacitySim.runCapacitySim();
 
 
-void build(Position* a_ptr)//(Position baubereich1[laenge][breite])
+}
+
+void CapacitySim::runCapacitySim()
+{
+    Building* baubereich = new Building[laenge * breite];
+
+    for (int i = 0; i < (laenge * breite); i)
+    {
+        baubereich[i] = le;
+        i++;
+    }
+
+    Building* a_ptr = baubereich;
+
+    bool showMenue = true;
+    int eingabe;
+    while (showMenue) {
+        cout << "Menue:" << endl;
+        cout << "(1) build new building (0 = Leer, 1 = Wasserkraftwerk, 2 = Windkraftwerk, 3 = Solarpanele)" << endl;
+        cout << "(2) clear area" << endl;
+        cout << "(3) show plan" << endl;
+        cout << "(4) end Program" << endl;
+        cout << "Enter Command:";
+        cin >> eingabe;
+        switch (eingabe)
+        {
+        case 1: build(a_ptr);
+            break;
+        case 2: clearArea(a_ptr);
+            break;
+        case 3: showPlan(a_ptr);
+            break;
+        case 4: showMenue = false;
+            break;
+        default: cout << "command not supported";
+        }
+
+    }
+
+    delete[] baubereich;
+}
+
+
+void CapacitySim::build(Building* a_ptr)
 {
     int typeBuilding;
     int lengthBuilding;
     int widthBuilding;
     int x;
     int y;
-    cout << "Type = " << endl;
+    std::cout << "Type = " << endl;
     cin >> typeBuilding;
-    cout << "Length = " << endl;
+    std::cout << "Length = " << endl;
     cin >> lengthBuilding;
-    cout << "Width = " << endl;
+    std::cout << "Width = " << endl;
     cin >> widthBuilding;
-    cout << "X-Coordinate = " << endl;
+    std::cout << "X-Coordinate = " << endl;
     cin >> x;
-    cout << "Y-Coordinate = " << endl;
+    std::cout << "Y-Coordinate = " << endl;
     cin >> y;
 
     //get start position
@@ -73,7 +123,7 @@ void build(Position* a_ptr)//(Position baubereich1[laenge][breite])
     //Check if start position is valid
     if (pos > (laenge * breite - 1))
     {
-        cout << "Error: Coordinates outside the predefined Building-Area" << endl;
+        std::cout << "Error: Coordinates outside the predefined Building-Area" << endl;
         return;
     }
 
@@ -81,12 +131,42 @@ void build(Position* a_ptr)//(Position baubereich1[laenge][breite])
     //check if measurements are valid
     if (((y + widthBuilding) > breite) || ((x + lengthBuilding) > laenge))
     {
-        cout << "Error: Some parts of the building are located outside the predefined Building-Area" << endl;
+        std::cout << "Error: Some parts of the building are located outside the predefined Building-Area" << endl;
         return;
     }
 
+
+    //get BuildingType
+    if (typeBuilding == 0)
+    {
+        building = le;
+    }
+    else if (typeBuilding == 1)
+    {
+
+        building = wa;
+    }
+    else if (typeBuilding == 2)
+    {
+
+        building = wi;
+    }
+    else if (typeBuilding == 3)
+    {
+
+        building = so;
+    }
+    else
+    {
+        std::cout << "Error: Undefined Buildingtype" << endl;
+        return;
+    }
+
+
+
     int startpostition = pos;
 
+    Building newBuilding = building;
 
     //Build
     for (int i = 0; i < widthBuilding; i++)
@@ -97,14 +177,14 @@ void build(Position* a_ptr)//(Position baubereich1[laenge][breite])
         {
 
             //Check if space is free
-            if (a_ptr[pos] == Leer)
+            if (a_ptr[pos].label == le.label)
             {
-                a_ptr[pos] = (Position)typeBuilding;
+                a_ptr[pos] = newBuilding;
                 pos += 1;
             }
             else
             {
-                cout << "Error: This building collides with another building" << endl;
+                std::cout << "Error: This building collides with another building" << endl;
                 return;
             }
 
@@ -115,7 +195,7 @@ void build(Position* a_ptr)//(Position baubereich1[laenge][breite])
     return;
 }
 
-void clearArea(Position* a_ptr)
+void CapacitySim::clearArea(Building* a_ptr)
 {
     int lengthBuilding;
     int widthBuilding;
@@ -159,7 +239,7 @@ void clearArea(Position* a_ptr)
 
         for (int a = 0; a < lengthBuilding; a++)
         {
-            a_ptr[pos] = Leer;
+            a_ptr[pos] = le;
             pos += 1;
         }
 
@@ -168,71 +248,64 @@ void clearArea(Position* a_ptr)
     return;
 }
 
-void showPlan(Position* a_ptr)
+void CapacitySim::showPlan(Building* a_ptr)
 {
     for (int i = (breite - 1); i >= 0; i--)
     {
         for (int a = 0; a < laenge; a++)
         {
-            cout << a_ptr[laenge * i + a];
+            cout << a_ptr[laenge * i + a].label;
         }
         cout << endl;
     }
 
-    return;
-}
+    bool waExists = false;
+    bool wiExists = false;
+    bool soExists = false;
 
-int main(int argc, char* argv[])
-{
-    cout << "You have entered " << argc
-        << " arguments:" << endl;
+    int waCounter = 0;
+    int wiCounter = 0;
+    int soCounter = 0;
 
-    for (int i = 0; i < argc; ++i)
-        cout << argv[i] << endl;
-
-    laenge = *argv[1] - 48; //char to int
-    breite = *argv[2] - 48; //char to int
-
-    cout << "Laenge = " << laenge << endl;
-    cout << "Breite = " << breite << endl; 
-
-    //Position baubereich[laenge + breite] = { Leer }; -> Ging in Code-Blocks, aber nicht mit Visual Studio (?)
-    Position* baubereich = new Position[laenge * breite];
-    for (int i = 0; i < (laenge * breite); i)
+    for (int i = (breite - 1); i >= 0; i--)
     {
-        baubereich[i] = Leer;
-        i++;
-    }
-    Position* a_ptr = baubereich;
-
-    bool showMenue = true;
-    int eingabe;
-    while (showMenue) {
-        cout << "Menue:" << endl;
-        cout << "(1) build new building (0 = Leer, 1 = Wasserkraftwerk, 2 = Windkraftwerk, 3 = Solarpanele)" << endl;
-        cout << "(2) clear area" << endl;
-        cout << "(3) show plan" << endl;
-        cout << "(4) end Program" << endl;
-        cout << "Enter Command:";
-        cin >> eingabe;
-        switch (eingabe)
+        for (int a = 0; a < laenge; a++)
         {
-        case 1: build(a_ptr);
-            break;
-        case 2: clearArea(a_ptr);
-            break;
-        case 3: showPlan(a_ptr);
-            break;
-        case 4: showMenue = false;
-            break;
-        default: cout << "command not supported";
-        }
+            if (a_ptr[laenge * i + a].label == wa.label) { waExists = true; waCounter++; }
+            if (a_ptr[laenge * i + a].label == wi.label) { wiExists = true; wiCounter++; }
+            if (a_ptr[laenge * i + a].label == so.label) { soExists = true; soCounter++; }
 
+        }
     }
 
-    delete[] baubereich;
 
-    return 0;
+    cout << "" << endl;
+    if (waExists)
+    {
+        cout << "Wasserkraftwerk (WA):" << endl << "Materialliste:" << wa.materialListe[0].ausgabe << ", " << wa.materialListe[1].ausgabe << ", " << wa.materialListe[2].ausgabe << ", " << wa.materialListe[3].ausgabe << endl;;
+
+        cout << "Preis pro Quadratmeter (Euro): " << wa.grundPreis << endl << "WA-Preis insgesamt (Euro): " << wa.grundPreis * waCounter << endl;
+    }
+    if (wiExists)
+    {
+        cout << "Windkraftwerk (WI):" << endl << "Materialliste:" << wi.materialListe[0].ausgabe << ", " << wi.materialListe[1].ausgabe << ", " << wi.materialListe[2].ausgabe << ", " << wi.materialListe[3].ausgabe << endl;
+
+        cout << "Preis pro Quadratmeter (Euro): " << wi.grundPreis << endl << "WI-Preis insgesamt (Euro): " << wi.grundPreis * wiCounter << endl;
+    }
+    if (soExists)
+    {
+        cout << "Solarpanele (SO):" << endl << "Materialliste:" << so.materialListe[0].ausgabe << ", " << so.materialListe[1].ausgabe << ", " << so.materialListe[2].ausgabe << ", " << so.materialListe[3].ausgabe << endl;;
+
+
+        cout << "Preis pro Quadratmeter (Euro): " << so.grundPreis << endl << "SO-Preis insgesamt (Euro): " << so.grundPreis * soCounter << endl;
+    }
+    cout << "" << endl;
+    cout << "Gesamtpreis fuer alle Buildings (Euro): " << wi.grundPreis * wiCounter + wa.grundPreis * waCounter + so.grundPreis * soCounter << endl;
+    cout << "" << endl;
+
+
+    return;
+
 }
 
 
