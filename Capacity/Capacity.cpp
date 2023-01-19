@@ -12,6 +12,8 @@ using namespace std;
 
 /*
 
+Aufgabe 1:
+
 Baubereich wie folgt aufgebaut
 
 x = laenge = Spalte
