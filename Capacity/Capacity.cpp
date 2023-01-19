@@ -1,40 +1,10 @@
-// Capacity1.cpp : Diese Datei enthält die Funktion "main". Hier beginnt und endet die Ausführung des Programms.
+// Capacity3.cpp : Diese Datei enthält die Funktion "main". Hier beginnt und endet die Ausführung des Programms.
 //
 
-// Capacity2.cpp : Diese Datei enthält die Funktion "main". Hier beginnt und endet die Ausführung des Programms.
-//
-
-#include <iostream>  
+#include <iostream>
+#include <map>
 #include "Capacity.h"
 
-using namespace std;
-
-
-/*
-
-Baubereich wie folgt aufgebaut
-
-x = laenge = Spalte
-y = breite = Zeile
-
-Labels:
-LE = Leer
-WA = Wasserkraftwerk
-WI = Windkraftwerk
-SO = Solarpanele
-
-
-Bereich ist in Quadrate aufgeteilt -> Diese sind duchnummeriert
-
-länge*(breite-1) ........      länge*breite-1
-.
-.
-2*länge
-länge    länge+1  länge+2 ...   2*länge-1
-0          1        2     ...   länge-1
-
-
-*/
 
 int main(int argc, char* argv[])
 {
@@ -49,6 +19,8 @@ int main(int argc, char* argv[])
 
     cout << "Laenge = " << laenge << endl;
     cout << "Breite = " << breite << endl;
+
+    
 
     CapacitySim capacitySim{ laenge, breite };
 
@@ -280,46 +252,60 @@ void CapacitySim::showPlan(Building* a_ptr)
 
 
     cout << "" << endl;
+
+     
+    std::map<Material, int>::iterator itWa = wa.myMap.begin();
+    std::map<Material, int>::iterator itWi = wi.myMap.begin();
+    std::map<Material, int>::iterator itSo = so.myMap.begin();
+
+    int gesamtMaterialPreis = 0;
+
     if (waExists)
     {
-        cout << "Wasserkraftwerk (WA):" << endl << "Materialliste:" << wa.materialListe[0].ausgabe << ", " << wa.materialListe[1].ausgabe << ", " << wa.materialListe[2].ausgabe << ", " << wa.materialListe[3].ausgabe << endl;;
+        cout << endl << "Wasserkraftwerk (WA):" << endl;
+
+        while (itWa != wa.myMap.end())
+        {
+            std::cout << "Material: " << itWa->first.ausgabe << ", Anzahl: " << itWa->second << std::endl;
+            gesamtMaterialPreis += itWa->first.preis;
+            ++itWa;
+        }
 
         cout << "Preis pro Quadratmeter (Euro): " << wa.grundPreis << endl << "WA-Preis insgesamt (Euro): " << wa.grundPreis * waCounter << endl;
     }
     if (wiExists)
     {
-        cout << "Windkraftwerk (WI):" << endl << "Materialliste:" << wi.materialListe[0].ausgabe << ", " << wi.materialListe[1].ausgabe << ", " << wi.materialListe[2].ausgabe << ", " << wi.materialListe[3].ausgabe << endl;
+        cout << endl << "Windkraftwerk (WI):" << endl;
+
+        while (itWi != wi.myMap.end())
+        {
+            std::cout << "Material: " << itWi->first.ausgabe << ", Anzahl: " << itWi->second << std::endl;
+            gesamtMaterialPreis += itWi->first.preis;
+            ++itWi;
+        }
 
         cout << "Preis pro Quadratmeter (Euro): " << wi.grundPreis << endl << "WI-Preis insgesamt (Euro): " << wi.grundPreis * wiCounter << endl;
     }
     if (soExists)
     {
-        cout << "Solarpanele (SO):" << endl << "Materialliste:" << so.materialListe[0].ausgabe << ", " << so.materialListe[1].ausgabe << ", " << so.materialListe[2].ausgabe << ", " << so.materialListe[3].ausgabe << endl;;
+        cout << endl << "Solarpanele (SO):" << endl;
 
+        while (itSo != so.myMap.end())
+        {
+            std::cout << "Key: " << itSo->first.ausgabe << ", Value: " << itSo->second << std::endl;
+            gesamtMaterialPreis += itSo->first.preis;
+            ++itSo;
+        }
 
         cout << "Preis pro Quadratmeter (Euro): " << so.grundPreis << endl << "SO-Preis insgesamt (Euro): " << so.grundPreis * soCounter << endl;
     }
     cout << "" << endl;
+    cout << "Gesamtmaterial Kosten (Euro): " << gesamtMaterialPreis << endl;
     cout << "Gesamtpreis fuer alle Buildings (Euro): " << wi.grundPreis * wiCounter + wa.grundPreis * waCounter + so.grundPreis * soCounter << endl;
-    cout << "" << endl;
 
 
     return;
-
 }
-
-
-// Programm ausführen: STRG+F5 oder Menüeintrag "Debuggen" > "Starten ohne Debuggen starten"
-// Programm debuggen: F5 oder "Debuggen" > Menü "Debuggen starten"
-
-// Tipps für den Einstieg: 
-//   1. Verwenden Sie das Projektmappen-Explorer-Fenster zum Hinzufügen/Verwalten von Dateien.
-//   2. Verwenden Sie das Team Explorer-Fenster zum Herstellen einer Verbindung mit der Quellcodeverwaltung.
-//   3. Verwenden Sie das Ausgabefenster, um die Buildausgabe und andere Nachrichten anzuzeigen.
-//   4. Verwenden Sie das Fenster "Fehlerliste", um Fehler anzuzeigen.
-//   5. Wechseln Sie zu "Projekt" > "Neues Element hinzufügen", um neue Codedateien zu erstellen, bzw. zu "Projekt" > "Vorhandenes Element hinzufügen", um dem Projekt vorhandene Codedateien hinzuzufügen.
-//   6. Um dieses Projekt später erneut zu öffnen, wechseln Sie zu "Datei" > "Öffnen" > "Projekt", und wählen Sie die SLN-Datei aus.
-
 
 // Programm ausführen: STRG+F5 oder Menüeintrag "Debuggen" > "Starten ohne Debuggen starten"
 // Programm debuggen: F5 oder "Debuggen" > Menü "Debuggen starten"
